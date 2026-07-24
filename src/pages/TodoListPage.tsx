@@ -5,6 +5,7 @@ import { useDueDateNotifications } from '@/hooks/useDueDateNotifications';
 import TodoForm from '@/components/TodoForm';
 import TodoItem from '@/components/TodoItem';
 import NotificationBanner from '@/components/NotificationBanner';
+import { tagColor } from '@/components/TodoForm';
 
 type Filter = 'all' | 'active' | 'completed';
 
@@ -23,19 +24,31 @@ interface TodoListPageProps {
 export default function TodoListPage({ userId, userEmail, onSignOut }: TodoListPageProps) {
   const { todos, addTodo, toggleTodo, deleteTodo, editTodo } = useTodos(userId);
   const [filter, setFilter] = useState<Filter>('all');
+  const [activeTag, setActiveTag] = useState<string | null>(null);
 
   useDueDateNotifications(todos);
 
+  const allTags = useMemo(() => {
+    const seen = new Set<string>();
+    for (const todo of todos) {
+      for (const tag of todo.tags) seen.add(tag);
+    }
+    return Array.from(seen).sort();
+  }, [todos]);
+
   const filteredTodos = useMemo(() => {
+    let list = todos;
     switch (filter) {
       case 'active':
-        return todos.filter((t) => !t.completed);
+        list = list.filter((t) => !t.completed);
+        break;
       case 'completed':
-        return todos.filter((t) => t.completed);
-      default:
-        return todos;
+        list = list.filter((t) => t.completed);
+        break;
     }
-  }, [todos, filter]);
+    if (activeTag) list = list.filter((t) => t.tags.includes(activeTag));
+    return list;
+  }, [todos, filter, activeTag]);
 
   const remaining = todos.filter((t) => !t.completed).length;
 
@@ -87,6 +100,39 @@ export default function TodoListPage({ userId, userEmail, onSignOut }: TodoListP
             </button>
           ))}
         </div>
+
+        {allTags.length > 0 && (
+          <div className="mb-4 flex flex-wrap gap-1.5">
+            <button
+              onClick={() => setActiveTag(null)}
+              className={`rounded-full border px-3 py-0.5 text-xs font-medium transition ${
+                activeTag === null
+                  ? 'border-emerald-400 bg-emerald-50 text-emerald-700'
+                  : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300'
+              }`}
+            >
+              すべて
+            </button>
+            {allTags.map((tag) => {
+              const { bg, text } = tagColor(tag);
+              const isActive = activeTag === tag;
+              return (
+                <button
+                  key={tag}
+                  onClick={() => setActiveTag(isActive ? null : tag)}
+                  className="rounded-full px-3 py-0.5 text-xs font-medium transition"
+                  style={
+                    isActive
+                      ? { backgroundColor: bg, color: text, outline: `2px solid ${text}`, outlineOffset: '1px' }
+                      : { backgroundColor: bg, color: text, opacity: 0.65 }
+                  }
+                >
+                  {tag}
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         {filteredTodos.length === 0 ? (
           <p className="rounded-xl border border-dashed border-slate-200 py-10 text-center text-sm text-slate-400">

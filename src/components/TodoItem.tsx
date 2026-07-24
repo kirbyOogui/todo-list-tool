@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Check, Clock, Pencil, Trash2, X } from 'lucide-react';
 import type { Todo } from '@/types/todo';
 import { formatDueDate, getDueDateStatus } from '@/lib/dueDate';
+import { tagColor } from '@/components/TodoForm';
 
 interface TodoItemProps {
   todo: Todo;
@@ -33,11 +34,11 @@ export default function TodoItem({ todo, onToggle, onDelete, onEdit }: TodoItemP
   };
 
   return (
-    <li className="group flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm transition hover:shadow-md">
+    <li className="group flex items-start gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm transition hover:shadow-md">
       <button
         onClick={() => onToggle(todo.id)}
         aria-label={todo.completed ? '未完了に戻す' : '完了にする'}
-        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition ${
+        className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition ${
           todo.completed
             ? 'border-emerald-500 bg-emerald-500 text-white'
             : 'border-slate-300 text-transparent hover:border-emerald-400'
@@ -59,9 +60,9 @@ export default function TodoItem({ todo, onToggle, onDelete, onEdit }: TodoItemP
           className="flex-1 rounded-md border border-slate-200 px-2 py-1 text-sm outline-none focus:border-emerald-400"
         />
       ) : (
-        <div className="flex flex-1 flex-col gap-1">
+        <div className="flex flex-1 flex-col gap-1.5">
           <span
-            className={`text-sm ${
+            className={`text-sm leading-snug ${
               todo.completed ? 'text-slate-400 line-through' : 'text-slate-700'
             }`}
           >
@@ -76,6 +77,22 @@ export default function TodoItem({ todo, onToggle, onDelete, onEdit }: TodoItemP
                 ? `${DUE_DATE_BADGE_LABELS[dueDateStatus]} · ${formatDueDate(todo.dueDate)}`
                 : formatDueDate(todo.dueDate)}
             </span>
+          )}
+          {todo.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {todo.tags.map((tag) => {
+                const { bg, text } = tagColor(tag);
+                return (
+                  <span
+                    key={tag}
+                    className="rounded-full px-2 py-0.5 text-xs font-medium"
+                    style={{ backgroundColor: bg, color: text }}
+                  >
+                    {tag}
+                  </span>
+                );
+              })}
+            </div>
           )}
         </div>
       )}

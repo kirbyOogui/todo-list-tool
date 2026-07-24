@@ -9,6 +9,7 @@ interface TodoRow {
   completed: boolean;
   created_at: string;
   due_date: string | null;
+  tags: string[];
 }
 
 function mapRowToTodo(row: TodoRow): Todo {
@@ -18,6 +19,7 @@ function mapRowToTodo(row: TodoRow): Todo {
     completed: row.completed,
     createdAt: new Date(row.created_at).getTime(),
     dueDate: row.due_date ? new Date(row.due_date).getTime() : null,
+    tags: row.tags ?? [],
   };
 }
 
@@ -46,7 +48,7 @@ export function useTodos(userId: string) {
     refetch().finally(() => setLoading(false));
   }, [refetch]);
 
-  const addTodo = async (title: string, dueDate: number | null = null) => {
+  const addTodo = async (title: string, dueDate: number | null = null, tags: string[] = []) => {
     const trimmed = title.trim();
     if (!trimmed) return;
     const { error: insertError } = await supabase
@@ -55,6 +57,7 @@ export function useTodos(userId: string) {
         user_id: userId,
         title: trimmed,
         due_date: dueDate ? new Date(dueDate).toISOString() : null,
+        tags,
       });
     if (insertError) {
       setError(insertError.message);
